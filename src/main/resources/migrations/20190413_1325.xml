@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
+
+    <changeSet author="henri5" id="1">
+        <loadData file="data/airports.csv" quotchar='"' tableName = "airport" >
+            <column header="airportId" type="skip"/>
+            <column header="name" name="name" type="string"/>
+            <column header="city" type="skip"/>
+            <column header="country" type="skip"/>
+            <column header="IATA" name="iata" type="string"/>
+            <column header="ICAO" name="icao" type="string"/>
+            <column header="latitude" name="latitude" type="numeric"/>
+            <column header="longitude" name="longitude" type="numeric"/>
+            <column header="altitude" type="skip"/>
+            <column header="timezone" type="skip"/>
+            <column header="dst" type="skip"/>
+            <column header="tzDatabaseTime" type="skip"/>
+            <column header="type" type="skip"/>
+            <column header="source" type="skip"/>
+        </loadData>
+    </changeSet>
+
+    <changeSet author="henri5" id="2">
+        <loadData file="data/routes.csv" quotchar='"' tableName = "flight" >
+            <column header="airline" type="skip"/>
+            <column header="airlineId" type="skip"/>
+            <column header="source" name="source" type="string"/>
+            <column header="sourceId" type="skip"/>
+            <column header="destination" name="destination" type="string"/>
+            <column header="destinationId" type="skip"/>
+            <column header="codeshare" type="skip"/>
+            <column header="stops" type="skip"/>
+            <column header="equipment" type="skip"/>
+        </loadData>
+    </changeSet>
+</databaseChangeLog>
