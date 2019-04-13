@@ -50,20 +50,11 @@ public class RouteService {
           .orElse(new Route(source, current, 0, List.of()));
 
       Optional.ofNullable(flights.get(current)).orElse(List.of()).forEach(flight -> {
-        Route route = Optional.ofNullable(routes.get(flight.getDestination())).orElse(new Route(source, flight.getDestination(), MAX_VALUE, List.of()));
-
-        if (route.getDistance() > flight.getDistance() + routeToCurrent.getDistance()) {
-          List<Flight> newFlights = new ArrayList<>(routeToCurrent.getFlights());
-          newFlights.add(flight);
-
-          routes.put(
-              flight.getDestination(),
-              new Route(source, flight.getDestination(), flight.getDistance() + routeToCurrent.getDistance(), unmodifiableList(newFlights)));
-        }
+        tryFindShorterRoute(routes, flight, routeToCurrent).ifPresent(route -> routes.put(flight.getDestination(), route));
       });
 
       if (current.equals(destination)) {
-        return Optional.of(routes.get(destination));
+        return Optional.ofNullable(routes.get(destination));
       }
 
       unvisited.remove(current);
@@ -80,5 +71,22 @@ public class RouteService {
 
       current = nextLocation.get();
     }
+  }
+
+  private Optional<Route> tryFindShorterRoute(Map<String, Route> routes, Flight flight, Route routeToCurrent) {
+    Route route = Optional.ofNullable(routes.get(flight.getDestination())).orElse(new Route(routeToCurrent.getSource(), flight.getDestination(), MAX_VALUE, List.of()));
+
+    if (route.getDistance() > flight.getDistance() + routeToCurrent.getDistance()) {
+      List<Flight> newFlights = new ArrayList<>(routeToCurrent.getFlights());
+      newFlights.add(flight);
+
+      return Optional.of(new Route(
+          routeToCurrent.getSource(),
+          flight.getDestination(),
+          flight.getDistance() + routeToCurrent.getDistance(),
+          unmodifiableList(newFlights)));
+    }
+
+    return Optional.empty();
   }
 }

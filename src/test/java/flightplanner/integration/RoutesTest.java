@@ -61,6 +61,18 @@ public class RoutesTest {
   }
 
   @Test
+  public void failsToFindRouteToSelf() {
+    insertFlight("A", "B", 1000);
+    insertFlight("B", "A", 2000);
+
+    String response = get("/api/routes/A/A");
+
+    assertJsonMap(response)
+        .containsExactly(
+            entry("message", "Route not found"));
+  }
+
+  @Test
   public void canFindRouteWithSingleStop() {
     insertFlight("A", "B", 1000);
     insertFlight("A", "C", 3000);
