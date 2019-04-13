@@ -4,8 +4,8 @@ import static java.lang.Long.MAX_VALUE;
 import static java.util.Collections.unmodifiableList;
 import static java.util.Comparator.comparingLong;
 import static java.util.stream.Collectors.groupingBy;
-import static java.util.stream.Collectors.toList;
-import static java.util.stream.Collectors.toSet;
+import static java.util.stream.Collectors.toUnmodifiableList;
+import static java.util.stream.Collectors.toUnmodifiableSet;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -24,7 +24,7 @@ import org.springframework.stereotype.Component;
 
 import flightplanner.dao.FlightDao;
 import flightplanner.entity.AirportCode;
-import flightplanner.entity.Flight;
+import flightplanner.entity.Connection;
 import flightplanner.entity.Route;
 
 @Component
@@ -34,15 +34,12 @@ public class RouteService {
   @Autowired
   private FlightDao flightDao;
 
-  public Optional<Route> findBestRoute(AirportCode source, AirportCode destination) {
-    Map<AirportCode, List<Flight>> flights = flightDao.getAll().stream()
-        .sorted(comparingLong(Flight::getDistance))
-        .collect(groupingBy(Flight::getSource, toList()));
+  @Autowired
+  private LandConnectionService landConnectionService;
 
-    Set<AirportCode> unvisited = flights.values().stream()
-        .flatMap(Collection::stream)
-        .flatMap(flight -> Stream.of(flight.getSource(), flight.getDestination()))
-        .collect(toSet());
+  public Optional<Route> findBestRoute(AirportCode source, AirportCode destination, boolean allowLandConnection) {
+    Map<AirportCode, List<Connection>> connections = getConnections(allowLandConnection);
+    Set<AirportCode> unvisited = getAllAirports(connections);
 
     Map<AirportCode, Route> routes = new HashMap<>();
     AirportCode current = source;
@@ -51,8 +48,8 @@ public class RouteService {
       Route routeToCurrent = Optional.ofNullable(routes.get(current))
           .orElse(new Route(source, current, 0, List.of()));
 
-      flights.getOrDefault(current, List.of()).stream()
-          .map(flight -> tryFindShorterRoute(routes, flight, routeToCurrent))
+      connections.getOrDefault(current, List.of()).stream()
+          .map(connection -> tryFindShorterRoute(routes, connection, routeToCurrent))
           .flatMap(Optional::stream)
           .forEach(route -> routes.put(route.getDestination(), route));
 
@@ -64,7 +61,7 @@ public class RouteService {
 
       Optional<AirportCode> nextLocation = routes.entrySet().stream()
           .filter(entry -> unvisited.contains(entry.getKey()))
-          .filter(entry -> entry.getValue().getFlights().size() <= 3)
+          .filter(entry -> entry.getValue().getConnections().size() <= 3)
           .min(comparingLong(entry -> entry.getValue().getDistance()))
           .map(Entry::getKey);
 
@@ -76,18 +73,32 @@ public class RouteService {
     }
   }
 
-  private Optional<Route> tryFindShorterRoute(Map<AirportCode, Route> routes, Flight flight, Route routeToCurrent) {
-    Route route = Optional.ofNullable(routes.get(flight.getDestination())).orElse(new Route(routeToCurrent.getSource(), flight.getDestination(), MAX_VALUE, List.of()));
+  private Map<AirportCode, List<Connection>> getConnections(boolean allowLandConnections) {
+    return Stream.concat(flightDao.getAll().stream(), allowLandConnections ? landConnectionService.getAll().stream() : Stream.empty())
+        .sorted(comparingLong(Connection::getDistance))
+        .collect(groupingBy(Connection::getSource, toUnmodifiableList()));
+  }
 
-    if (route.getDistance() > flight.getDistance() + routeToCurrent.getDistance()) {
-      List<Flight> newFlights = new ArrayList<>(routeToCurrent.getFlights());
-      newFlights.add(flight);
+  private Set<AirportCode> getAllAirports(Map<AirportCode, List<Connection>> connections) {
+    return connections.values().stream()
+        .flatMap(Collection::stream)
+        .flatMap(flight -> Stream.of(flight.getSource(), flight.getDestination()))
+        .collect(toUnmodifiableSet());
+  }
+
+  private Optional<Route> tryFindShorterRoute(Map<AirportCode, Route> routes, Connection connection, Route routeToCurrent) {
+    Route route = Optional.ofNullable(routes.get(connection.getDestination()))
+        .orElse(new Route(routeToCurrent.getSource(), connection.getDestination(), MAX_VALUE, List.of()));
+
+    if (route.getDistance() > connection.getDistance() + routeToCurrent.getDistance()) {
+      List<Connection> connections = new ArrayList<>(routeToCurrent.getConnections());
+      connections.add(connection);
 
       return Optional.of(new Route(
           routeToCurrent.getSource(),
-          flight.getDestination(),
-          flight.getDistance() + routeToCurrent.getDistance(),
-          unmodifiableList(newFlights)));
+          connection.getDestination(),
+          connection.getDistance() + routeToCurrent.getDistance(),
+          unmodifiableList(connections)));
     }
 
     return Optional.empty();

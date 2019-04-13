@@ -22,10 +22,10 @@ public class RoutesTest extends IntegrationTest {
             entry("source", "A"),
             entry("destination", "B"),
             entry("distance", 1000));
-    assertJsonList(response, "$.flights")
-        .extracting("source", "destination", "distance")
+    assertJsonList(response, "$.connections")
+        .extracting("source", "destination", "distance", "type")
         .containsExactly(
-            tuple("A", "B", 1000));
+            tuple("A", "B", 1000, "AIR"));
   }
 
   @Test
@@ -71,11 +71,11 @@ public class RoutesTest extends IntegrationTest {
             entry("source", "A"),
             entry("destination", "C"),
             entry("distance", 2000));
-    assertJsonList(response, "$.flights")
-        .extracting("source", "destination", "distance")
+    assertJsonList(response, "$.connections")
+        .extracting("source", "destination", "distance", "type")
         .containsExactly(
-            tuple("A", "B", 1000),
-            tuple("B", "C", 1000));
+            tuple("A", "B", 1000, "AIR"),
+            tuple("B", "C", 1000, "AIR"));
   }
 
   @Test
@@ -92,13 +92,13 @@ public class RoutesTest extends IntegrationTest {
             entry("source", "A"),
             entry("destination", "E"),
             entry("distance", 4000));
-    assertJsonList(response, "$.flights")
-        .extracting("source", "destination", "distance")
+    assertJsonList(response, "$.connections")
+        .extracting("source", "destination", "distance", "type")
         .containsExactly(
-            tuple("A", "B", 1000),
-            tuple("B", "C", 1000),
-            tuple("C", "D", 1000),
-            tuple("D", "E", 1000));
+            tuple("A", "B", 1000, "AIR"),
+            tuple("B", "C", 1000, "AIR"),
+            tuple("C", "D", 1000, "AIR"),
+            tuple("D", "E", 1000, "AIR"));
   }
 
   @Test
@@ -117,13 +117,13 @@ public class RoutesTest extends IntegrationTest {
             entry("source", "A"),
             entry("destination", "F"),
             entry("distance", 4000));
-    assertJsonList(response, "$.flights")
-        .extracting("source", "destination", "distance")
+    assertJsonList(response, "$.connections")
+        .extracting("source", "destination", "distance", "type")
         .containsExactly(
-            tuple("A", "B", 1000),
-            tuple("B", "D", 1000),
-            tuple("D", "E", 1000),
-            tuple("E", "F", 1000));
+            tuple("A", "B", 1000, "AIR"),
+            tuple("B", "D", 1000, "AIR"),
+            tuple("D", "E", 1000, "AIR"),
+            tuple("E", "F", 1000, "AIR"));
   }
 
   @Test

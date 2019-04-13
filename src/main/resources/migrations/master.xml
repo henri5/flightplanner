@@ -9,4 +9,5 @@
     <include file="20190413_1306.sql" relativeToChangelogFile="true" />
     <include file="20190413_1325.xml" relativeToChangelogFile="true" />
     <include file="20190413_1426.sql" relativeToChangelogFile="true" />
+    <include file="20190413_2103.sql" relativeToChangelogFile="true" />
 </databaseChangeLog>

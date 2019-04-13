@@ -6,6 +6,7 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import flightplanner.entity.AirportCode;
@@ -19,8 +20,12 @@ public class RouteController {
   private RouteService service;
 
   @GetMapping("api/routes/{source}/{destination}")
-  public Object getRoute(@PathVariable("source") AirportCode source, @PathVariable("destination") AirportCode destination) {
-    Optional<Route> route = service.findBestRoute(source, destination);
+  public Object getRoute(
+      @PathVariable("source") AirportCode source,
+      @PathVariable("destination") AirportCode destination,
+      @RequestParam(value = "allowLandConnection", required = false) boolean allowLandConnection
+  ) {
+    Optional<Route> route = service.findBestRoute(source, destination, allowLandConnection);
 
     if (route.isPresent()) {
       return route;

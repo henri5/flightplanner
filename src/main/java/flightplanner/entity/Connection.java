@@ -1,22 +1,20 @@
 package flightplanner.entity;
 
-import java.util.List;
-
 import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
-public class Route {
+public class Connection {
 
   private final AirportCode source;
   private final AirportCode destination;
   private final long distance;
-  private final List<Connection> connections;
+  private final ConnectionType type;
 
-  public Route(AirportCode source, AirportCode destination, long distance, List<Connection> connections) {
+  public Connection(AirportCode source, AirportCode destination, long distance, ConnectionType type) {
     this.source = source;
     this.destination = destination;
     this.distance = distance;
-    this.connections = connections;
+    this.type = type;
   }
 
   public AirportCode getSource() {
@@ -31,7 +29,7 @@ public class Route {
     return distance;
   }
 
-  public List<Connection> getConnections() {
-    return connections;
+  public ConnectionType getType() {
+    return type;
   }
 }
