@@ -1,17 +1,20 @@
 package flightplanner.service;
 
+import static java.lang.Long.MAX_VALUE;
 import static java.util.Collections.unmodifiableList;
 import static java.util.Comparator.comparingLong;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toSet;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -29,12 +32,15 @@ public class RouteService {
   @Autowired
   private FlightDao flightDao;
 
-  public Route findBestRoute(String source, String destination) {
+  public Optional<Route> findBestRoute(String source, String destination) {
     Map<String, List<Flight>> flights = flightDao.getAll().stream()
         .sorted(comparingLong(Flight::getDistance))
         .collect(groupingBy(Flight::getSource, toList()));
 
-    Set<String> unvisited = new HashSet<>(flights.keySet());
+    Set<String> unvisited = flights.values().stream()
+        .flatMap(Collection::stream)
+        .flatMap(flight -> Stream.of(flight.getSource(), flight.getDestination()))
+        .collect(toSet());
 
     Map<String, Route> routes = new HashMap<>();
     String current = source;
@@ -43,9 +49,8 @@ public class RouteService {
       Route routeToCurrent = Optional.ofNullable(routes.get(current))
           .orElse(new Route(source, current, 0, List.of()));
 
-      flights.get(current).forEach(flight -> {
-        Route route = Optional.ofNullable(routes.get(flight.getDestination()))
-            .orElse(new Route(source, flight.getDestination(), Long.MAX_VALUE, List.of()));
+      Optional.ofNullable(flights.get(current)).orElse(List.of()).forEach(flight -> {
+        Route route = Optional.ofNullable(routes.get(flight.getDestination())).orElse(new Route(source, flight.getDestination(), MAX_VALUE, List.of()));
 
         if (route.getDistance() > flight.getDistance() + routeToCurrent.getDistance()) {
           List<Flight> newFlights = new ArrayList<>(routeToCurrent.getFlights());
@@ -58,16 +63,22 @@ public class RouteService {
       });
 
       if (current.equals(destination)) {
-        return routes.get(destination);
+        return Optional.of(routes.get(destination));
       }
 
       unvisited.remove(current);
 
-      current = routes.entrySet().stream()
+      Optional<String> nextLocation = routes.entrySet().stream()
           .filter(entry -> unvisited.contains(entry.getKey()))
+          .filter(entry -> entry.getValue().getFlights().size() <= 3)
           .min(comparingLong(entry -> entry.getValue().getDistance()))
-          .orElseThrow()
-          .getKey();
+          .map(Map.Entry::getKey);
+
+      if (nextLocation.isEmpty()) {
+        return Optional.ofNullable(routes.get(destination));
+      }
+
+      current = nextLocation.get();
     }
   }
 }
