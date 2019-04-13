@@ -4,8 +4,8 @@ import static java.lang.Long.MAX_VALUE;
 import static java.util.Collections.unmodifiableList;
 import static java.util.Comparator.comparingLong;
 import static java.util.stream.Collectors.groupingBy;
+import static java.util.stream.Collectors.toSet;
 import static java.util.stream.Collectors.toUnmodifiableList;
-import static java.util.stream.Collectors.toUnmodifiableSet;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -83,7 +83,7 @@ public class RouteService {
     return connections.values().stream()
         .flatMap(Collection::stream)
         .flatMap(flight -> Stream.of(flight.getSource(), flight.getDestination()))
-        .collect(toUnmodifiableSet());
+        .collect(toSet());
   }
 
   private Optional<Route> tryFindShorterRoute(Map<AirportCode, Route> routes, Connection connection, Route routeToCurrent) {
