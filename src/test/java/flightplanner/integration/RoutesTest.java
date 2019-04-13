@@ -3,22 +3,12 @@ package flightplanner.integration;
 import static org.assertj.core.api.Assertions.entry;
 import static org.assertj.core.api.Assertions.tuple;
 
-import org.junit.Before;
 import org.junit.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.jdbc.core.JdbcTemplate;
 
+import flightplanner.integration.support.DatabaseTestMixin;
 import flightplanner.integration.support.IntegrationTest;
 
 public class RoutesTest extends IntegrationTest {
-
-  @Autowired
-  private JdbcTemplate jdbcTemplate;
-
-  @Before
-  public void before() {
-    jdbcTemplate.update("DELETE FROM flight");
-  }
 
   @Test
   public void canFindDirectFlight() {
@@ -152,6 +142,6 @@ public class RoutesTest extends IntegrationTest {
   }
 
   private void insertFlight(String source, String destination, long distance) {
-    jdbcTemplate.update("INSERT INTO flight(source, destination, distance) VALUES (?, ?, ?)", source, destination, distance);
+    DatabaseTestMixin.State.jdbcTemplate.update("INSERT INTO flight(source, destination, distance) VALUES (?, ?, ?)", source, destination, distance);
   }
 }

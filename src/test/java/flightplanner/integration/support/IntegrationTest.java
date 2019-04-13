@@ -6,6 +6,7 @@ import static org.springframework.http.HttpStatus.OK;
 
 import org.assertj.core.api.ListAssert;
 import org.assertj.core.api.MapAssert;
+import org.junit.Before;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -20,14 +21,18 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(webEnvironment = RANDOM_PORT)
-public class IntegrationTest {
+public abstract class IntegrationTest implements DatabaseCleanupTestMixin {
+
+  static {
+    DatabaseTestMixin.State.setProperties();
+  }
 
   @Autowired
   private TestRestTemplate restTemplate;
 
-  static {
-    System.setProperty("spring.datasource.url", "jdbc:tc:postgresql:9.6.5://localhost/test");
-    System.setProperty("spring.datasource.driver-class-name", "org.testcontainers.jdbc.ContainerDatabaseDriver");
+  @Before
+  public void before() {
+    databaseCleanup();
   }
 
   public MapAssert<Object, Object> assertJsonMap(String json) {
