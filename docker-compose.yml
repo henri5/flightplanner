@@ -1,0 +1,11 @@
+postgres:
+  container_name:
+    flights
+  image:
+    postgres:latest
+  ports:
+    - "5432:5432"
+  environment:
+    POSTGRES_DB: flights
+    POSTGRES_USER: postgres
+    POSTGRES_PASSWORD: docker
