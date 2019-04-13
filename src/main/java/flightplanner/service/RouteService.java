@@ -12,6 +12,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
@@ -22,6 +23,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import flightplanner.dao.FlightDao;
+import flightplanner.entity.AirportCode;
 import flightplanner.entity.Flight;
 import flightplanner.entity.Route;
 
@@ -32,26 +34,27 @@ public class RouteService {
   @Autowired
   private FlightDao flightDao;
 
-  public Optional<Route> findBestRoute(String source, String destination) {
-    Map<String, List<Flight>> flights = flightDao.getAll().stream()
+  public Optional<Route> findBestRoute(AirportCode source, AirportCode destination) {
+    Map<AirportCode, List<Flight>> flights = flightDao.getAll().stream()
         .sorted(comparingLong(Flight::getDistance))
         .collect(groupingBy(Flight::getSource, toList()));
 
-    Set<String> unvisited = flights.values().stream()
+    Set<AirportCode> unvisited = flights.values().stream()
         .flatMap(Collection::stream)
         .flatMap(flight -> Stream.of(flight.getSource(), flight.getDestination()))
         .collect(toSet());
 
-    Map<String, Route> routes = new HashMap<>();
-    String current = source;
+    Map<AirportCode, Route> routes = new HashMap<>();
+    AirportCode current = source;
 
     while (true) {
       Route routeToCurrent = Optional.ofNullable(routes.get(current))
           .orElse(new Route(source, current, 0, List.of()));
 
-      Optional.ofNullable(flights.get(current)).orElse(List.of()).forEach(flight -> {
-        tryFindShorterRoute(routes, flight, routeToCurrent).ifPresent(route -> routes.put(flight.getDestination(), route));
-      });
+      flights.getOrDefault(current, List.of()).stream()
+          .map(flight -> tryFindShorterRoute(routes, flight, routeToCurrent))
+          .flatMap(Optional::stream)
+          .forEach(route -> routes.put(route.getDestination(), route));
 
       if (current.equals(destination)) {
         return Optional.ofNullable(routes.get(destination));
@@ -59,11 +62,11 @@ public class RouteService {
 
       unvisited.remove(current);
 
-      Optional<String> nextLocation = routes.entrySet().stream()
+      Optional<AirportCode> nextLocation = routes.entrySet().stream()
           .filter(entry -> unvisited.contains(entry.getKey()))
           .filter(entry -> entry.getValue().getFlights().size() <= 3)
           .min(comparingLong(entry -> entry.getValue().getDistance()))
-          .map(Map.Entry::getKey);
+          .map(Entry::getKey);
 
       if (nextLocation.isEmpty()) {
         return Optional.ofNullable(routes.get(destination));
@@ -73,7 +76,7 @@ public class RouteService {
     }
   }
 
-  private Optional<Route> tryFindShorterRoute(Map<String, Route> routes, Flight flight, Route routeToCurrent) {
+  private Optional<Route> tryFindShorterRoute(Map<AirportCode, Route> routes, Flight flight, Route routeToCurrent) {
     Route route = Optional.ofNullable(routes.get(flight.getDestination())).orElse(new Route(routeToCurrent.getSource(), flight.getDestination(), MAX_VALUE, List.of()));
 
     if (route.getDistance() > flight.getDistance() + routeToCurrent.getDistance()) {

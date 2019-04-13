@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
+import flightplanner.entity.AirportCode;
 import flightplanner.entity.Flight;
 
 @Component
@@ -20,8 +21,8 @@ public class FlightDao {
   public List<Flight> getAll() {
     return jdbcTemplate.query("SELECT source, destination, distance FROM flight",
         (resultSet, i) -> new Flight(
-            resultSet.getString("source"),
-            resultSet.getString("destination"),
+            new AirportCode(resultSet.getString("source")),
+            new AirportCode(resultSet.getString("destination")),
             resultSet.getLong("distance")));
   }
 }
