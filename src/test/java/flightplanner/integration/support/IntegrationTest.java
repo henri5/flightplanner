@@ -2,7 +2,9 @@ package flightplanner.integration.support;
 
 import static org.junit.Assert.assertEquals;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
+import static org.springframework.http.HttpMethod.GET;
 import static org.springframework.http.HttpStatus.OK;
+import static org.springframework.http.MediaType.APPLICATION_JSON;
 
 import org.assertj.core.api.ListAssert;
 import org.assertj.core.api.MapAssert;
@@ -14,8 +16,6 @@ import org.springframework.boot.test.json.JsonContentAssert;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.junit4.SpringRunner;
 
@@ -51,7 +51,7 @@ public abstract class IntegrationTest implements DatabaseCleanupTestMixin {
 
   public ResponseEntity<String> makeRequest(String path) {
     HttpHeaders headers = new HttpHeaders();
-    headers.setContentType(MediaType.APPLICATION_JSON);
-    return restTemplate.exchange(path, HttpMethod.GET, new HttpEntity<>(headers), String.class);
+    headers.setContentType(APPLICATION_JSON);
+    return restTemplate.exchange(path, GET, new HttpEntity<>(headers), String.class);
   }
 }

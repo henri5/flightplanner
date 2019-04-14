@@ -9,7 +9,6 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
 import flightplanner.entity.AirportCode;
-import flightplanner.entity.Flight;
 import flightplanner.entity.LandConnection;
 
 @Component

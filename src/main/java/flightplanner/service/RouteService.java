@@ -39,7 +39,7 @@ public class RouteService {
 
   public Optional<Route> findBestRoute(AirportCode source, AirportCode destination, boolean allowLandConnection) {
     Map<AirportCode, List<Connection>> connections = getConnections(allowLandConnection);
-    Set<AirportCode> unvisited = getAllAirports(connections);
+    Set<AirportCode> unvisited = getAirports(connections);
 
     Map<AirportCode, Route> routes = new HashMap<>();
     AirportCode current = source;
@@ -79,7 +79,7 @@ public class RouteService {
         .collect(groupingBy(Connection::getSource, toUnmodifiableList()));
   }
 
-  private Set<AirportCode> getAllAirports(Map<AirportCode, List<Connection>> connections) {
+  private Set<AirportCode> getAirports(Map<AirportCode, List<Connection>> connections) {
     return connections.values().stream()
         .flatMap(Collection::stream)
         .flatMap(flight -> Stream.of(flight.getSource(), flight.getDestination()))
