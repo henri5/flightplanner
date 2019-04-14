@@ -49,13 +49,10 @@ public class RouteService {
           .orElse(new Route(source, current, 0, List.of()));
 
       connections.getOrDefault(current, List.of()).stream()
+          .filter(connection -> unvisited.contains(connection.getDestination()))
           .map(connection -> tryFindShorterRoute(routes, connection, routeToCurrent))
           .flatMap(Optional::stream)
           .forEach(route -> routes.put(route.getDestination(), route));
-
-      if (current.equals(destination)) {
-        return Optional.ofNullable(routes.get(destination));
-      }
 
       unvisited.remove(current);
 
@@ -65,7 +62,7 @@ public class RouteService {
           .min(comparingLong(entry -> entry.getValue().getDistance()))
           .map(Entry::getKey);
 
-      if (nextLocation.isEmpty()) {
+      if (nextLocation.map(airportCode -> airportCode.equals(destination)).orElse(true)) {
         return Optional.ofNullable(routes.get(destination));
       }
 
