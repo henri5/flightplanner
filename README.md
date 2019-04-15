@@ -3,6 +3,11 @@
 ### Requirements
 * Docker
 * Java 11
+* IntelliJ with Docker integration enabled
+
+### How to run
+* Run `docker-compose.yml` as Docker container to initialize database
+* Start app from `flightplanner.Application`
 
 ### What
 * do `GET /api/routes/${source IATA}/${destination IATA}`
