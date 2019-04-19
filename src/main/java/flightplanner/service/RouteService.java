@@ -31,6 +31,8 @@ import flightplanner.entity.Route;
 @ParametersAreNonnullByDefault
 public class RouteService {
 
+  private static final int MAX_CONNECTIONS = 4;
+
   @Autowired
   private FlightDao flightDao;
 
@@ -42,9 +44,11 @@ public class RouteService {
     Set<AirportCode> unvisited = getAirports(connections);
 
     Map<AirportCode, Route> routes = new HashMap<>();
-    AirportCode current = source;
+    Optional<AirportCode> optionalCurrent = Optional.of(source);
 
-    while (true) {
+    while (optionalCurrent.map(airportCode -> !airportCode.equals(destination)).orElse(false)) {
+      AirportCode current = optionalCurrent.get();
+
       Route routeToCurrent = Optional.ofNullable(routes.get(current))
           .orElse(new Route(source, current, 0, List.of()));
 
@@ -56,18 +60,14 @@ public class RouteService {
 
       unvisited.remove(current);
 
-      Optional<AirportCode> nextLocation = routes.entrySet().stream()
+      optionalCurrent = routes.entrySet().stream()
           .filter(entry -> unvisited.contains(entry.getKey()))
-          .filter(entry -> entry.getValue().getConnections().size() <= 3)
+          .filter(entry -> entry.getValue().getConnections().size() < MAX_CONNECTIONS)
           .min(comparingLong(entry -> entry.getValue().getDistance()))
           .map(Entry::getKey);
-
-      if (nextLocation.map(airportCode -> airportCode.equals(destination)).orElse(true)) {
-        return Optional.ofNullable(routes.get(destination));
-      }
-
-      current = nextLocation.get();
     }
+
+    return Optional.ofNullable(routes.get(destination));
   }
 
   private Map<AirportCode, List<Connection>> getConnections(boolean allowLandConnections) {
